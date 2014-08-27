@@ -16,20 +16,21 @@ there is a saying:
 
 > One day i have a blade, die out the gbker!
 
-why not use utf8?
-hy not use utf8?
-y not use utf8?
-not use utf8?
-ot use utf8?
-t use utf8?
-use utf8?
-se utf8?
-e utf8?
-utf8?
-tf8?
-f8?
-8?
-?
+why not use utf8?  
+hy not use utf8?  
+y not use utf8?  
+not use utf8?  
+ot use utf8?  
+t use utf8?  
+use utf8?  
+se utf8?  
+e utf8?  
+utf8?  
+tf8?  
+f8?  
+8?  
+?  
+
 
 How to use
 --------------
