@@ -5,12 +5,10 @@ import requests
 from urllib import parse
 import os
 import queue
-import pickle
 
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(threadName)s %(message)s')
+logging.basicConfig(level=logging.WARNING, format='%(threadName)s %(message)s')
 _PHP_URL = "http://avdot.net/cover.php"
-
 
 
 def mk_dir(parentpath, name):
@@ -21,15 +19,16 @@ def mk_dir(parentpath, name):
         pass
     return path
 
-class DownloadedImage:
 
-    #if continuous_exigist > 15, there is no more image should be download
-    _exit_bound = 15
+class DownloadedImage:
+    #if continuous_exigist > 55, there is no more image should be download
+    _exit_bound = 55
 
     def __init__(self):
         self._lock = threading.Lock()
         self._set = set()
         self.continuous_exigst = 0
+
     def exigst(self, key):
         with self._lock:
             if key in self._set:
@@ -46,7 +45,8 @@ class DownloadedImage:
     def is_need_exit(self):
         return True if self.continuous_exigst > self._exit_bound else False
 
-log_list=[]
+log_list = []
+
 
 def get_correct_url_and_filename():
 
@@ -54,7 +54,7 @@ def get_correct_url_and_filename():
 
     req = requests.head(_PHP_URL)
     parsed_url = parse.urlparse(req.headers['location'])
-    logging.debug('error path is %s:',parsed_url.path)
+    logging.debug('error path is %s:', parsed_url.path)
 
     try:
         fix_path = parsed_url.path.encode('latin1').decode('gbk')
@@ -63,12 +63,9 @@ def get_correct_url_and_filename():
         encoder = 'utf8'
 
     filename = fix_path.split('/')[-1]
-    correct_path = parse.quote(fix_path,encoding=encoder)
+    correct_path = parse.quote(fix_path, encoding=encoder)
     correct_url = parse.urlunsplit((parsed_url.scheme, parsed_url.netloc, correct_path, '', ''))
-
-
     return correct_url, filename
-
 
 
 class Base:
@@ -84,8 +81,12 @@ class Base:
             if self.downloaded_set.exigst(url):
                 return
             else:
-                print('download:',url)
                 self.downloaded_set.add(url)
+
+                if os.path.exists(filename):
+                    return
+
+                print('download:', url)
                 content = requests.get(url).content
                 with open(filename, 'wb') as f:
                     f.write(content)
@@ -98,23 +99,23 @@ def main():
     mk_dir(os.getcwd(), Base.folder)
     os.chdir(Base.folder)
     base = Base()
-    s = threading.Semaphore(3)
-    target_list=queue.deque(maxlen=6)
+    s = threading.Semaphore(8)
+    target_list = queue.deque(maxlen=9)
     while True:
-        for i in range(5):
+        for i in range(8):
             t = threading.Thread(target=base.download, args=(s,))
             t.start()
             target_list.append(t)
 
         for t in target_list:
             t.join()
+
         if base.is_finish():
             break
 
     while True:
-        if  not any( t.is_alive() for t in target_list):
+        if not any(t.is_alive() for t in target_list):
             break
 
 if __name__ == '__main__':
     main()
-
