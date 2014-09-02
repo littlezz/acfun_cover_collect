@@ -1,5 +1,8 @@
 This is a scipt that download the cover image of h.acfun.tv
  
+
+
+
 Damn it!
 -----------
 Firstly, i lost my chinese input method and my english is not pretty good, but i still want to  *fxck* the man who does not use 'utf8'!  
@@ -30,6 +33,11 @@ tf8?
 f8?  
 8?  
 ?  
+
+
+Good News
+--------------
+Now the url encoder is utf8!
 
 
 How to use

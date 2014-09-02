@@ -8,7 +8,7 @@ import queue
 
 import logging
 logging.basicConfig(level=logging.WARNING, format='%(threadName)s %(message)s')
-_PHP_URL = "http://avdot.net/cover.php"
+_PHP_URL = "http://sou.im/cover.php"
 
 
 def mk_dir(parentpath, name):
@@ -50,14 +50,14 @@ log_list = []
 
 def get_correct_url_and_filename():
 
-    encoder = 'gbk'
+    encoder = 'utf8'
 
     req = requests.head(_PHP_URL)
     parsed_url = parse.urlparse(req.headers['location'])
     logging.debug('error path is %s:', parsed_url.path)
 
     try:
-        fix_path = parsed_url.path.encode('latin1').decode('gbk')
+        fix_path = parsed_url.path.encode('latin1').decode(encoder)
     except UnicodeDecodeError:
         fix_path = parsed_url.path.encode('latin1').decode('utf8')
         encoder = 'utf8'
