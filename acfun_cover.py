@@ -8,7 +8,7 @@ import queue
 
 import logging
 logging.basicConfig(level=logging.WARNING, format='%(threadName)s %(message)s')
-_PHP_URL = "http://sou.im/cover.php"
+_PHP_URL = "http://cover.acfunwiki.org/cover.php"
 
 
 def mk_dir(parentpath, name):
