@@ -1,5 +1,7 @@
 This is a script that download the cover image of h.acfun.tv
 
+直接下载图包
+[download the collection of cover](https://github.com/littlezz/acfun_cover_collect/releases/download/v1.0/images.zip)
 
 Screen shot
 -------------
