@@ -1,6 +1,9 @@
-This is a scipt that download the cover image of h.acfun.tv
- 
+This is a script that download the cover image of h.acfun.tv
 
+
+Screen shot
+-------------
+![](/screenshot/ss1.png)
 
 
 Damn it!
