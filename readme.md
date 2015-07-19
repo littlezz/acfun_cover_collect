@@ -3,6 +3,22 @@ This is a script that download the cover image of h.acfun.tv
 直接下载图包
 [download the collection of cover](https://github.com/littlezz/acfun_cover_collect/releases/download/v1.0/images.zip)
 
+
+
+编码问题
+----------
+`encode('latin1').decode('utf8')` 这个做法是正确的。
+
+requests最近的一次提交修正了这个问题
+(https://github.com/kennethreitz/requests/pull/2655/commits)
+
+然而现在的问题是， 某些情况下location中的url时不完整的， 特点是都已\x85结尾， 而且我花了一个下午成功重现过一次， 里面包含有两个`-`
+
+现在的问题是， url缺失是requests的锅还是httplib的锅。
+
+
+
+
 Screen shot
 -------------
 result
