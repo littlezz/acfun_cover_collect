@@ -8,6 +8,7 @@ from urllib import parse
 import os
 import queue
 import unicodedata
+from requests.utils import requote_uri
 import logging
 
 logging.basicConfig(level=logging.WARNING, format='%(threadName)s %(message)s')
@@ -77,21 +78,32 @@ def get_correct_url_and_filename():
 
     encoder = 'utf8'
 
-    req = requests.head(_PHP_URL, headers={'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4'})
-    parsed_url = parse.urlparse(req.headers['location'])
-    logging.info('error path is %s:', parsed_url.path)
+    req = requests.head(_PHP_URL)
+    # parsed_url = parse.urlparse(req.headers['location'])
+    url = req.headers['location']
 
+    logging.warning('error path is %s:', url)
+
+
+    # try:
+    #     fix_path = parsed_url.path.encode('latin1').decode(encoder)
+    # except UnicodeDecodeError:
+    #     fix_path = parsed_url.path.encode('utf8').decode('utf8')
+    #     encoder = 'utf8'
 
     try:
-        fix_path = parsed_url.path.encode('latin1').decode(encoder)
+        url = url.encode('latin1').decode('utf8')
     except UnicodeDecodeError:
-        fix_path = parsed_url.path.encode('utf8').decode('utf8')
-        encoder = 'utf8'
+        pass
+
+    parsed_url = parse.urlparse(url)
+    fix_path = parsed_url.path
 
 
     filename = safe_pathname(fix_path.split('/')[-1])
-    correct_path = parse.quote(fix_path, encoding=encoder)
-    correct_url = parse.urlunsplit((parsed_url.scheme, parsed_url.netloc, correct_path, '', ''))
+    # correct_path = parse.quote(fix_path, encoding=encoder)
+    # correct_url = parse.urlunsplit((parsed_url.scheme, parsed_url.netloc, correct_path, '', ''))
+    correct_url = requote_uri(url)
     return correct_url, filename
 
 
