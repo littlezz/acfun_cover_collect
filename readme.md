@@ -3,6 +3,8 @@ This is a script that download the cover image of h.acfun.tv
 
 Screen shot
 -------------
+result
+
 ![](/screenshot/ss1.png)
 
 
