@@ -1,3 +1,5 @@
+import time
+
 __author__ = 'zz'
 
 import threading
@@ -5,10 +7,23 @@ import requests
 from urllib import parse
 import os
 import queue
-
 import logging
+import string
+
 logging.basicConfig(level=logging.WARNING, format='%(threadName)s %(message)s')
+
+
 _PHP_URL = "http://cover.acfunwiki.org/cover.php"
+log_list = []
+
+
+quit_thread = object()
+
+
+def safe_pathname(path):
+    valid_char = string.ascii_letters + string.digits + ' -_.()'
+
+    return ''.join(c if c in valid_char else '_' for c in path )
 
 
 def mk_dir(parentpath, name):
@@ -27,15 +42,15 @@ class DownloadedImage:
     def __init__(self):
         self._lock = threading.Lock()
         self._set = set()
-        self.continuous_exigst = 0
+        self.continuous_exist = 0
 
-    def exigst(self, key):
+    def exist(self, key):
         with self._lock:
             if key in self._set:
-                self.continuous_exigst += 1
+                self.continuous_exist += 1
                 return True
             else:
-                self.continuous_exigst = 0
+                self.continuous_exist = 0
                 return False
 
     def add(self, key):
@@ -43,79 +58,109 @@ class DownloadedImage:
             self._set.add(key)
 
     def is_need_exit(self):
-        return True if self.continuous_exigst > self._exit_bound else False
+        return True if self.continuous_exist > self._exit_bound else False
 
-log_list = []
+    def get_items_num(self):
+        return len(self._set)
 
 
+# I really don't know how to get the correct url , F*ck the encoding
 def get_correct_url_and_filename():
 
     encoder = 'utf8'
 
-    req = requests.head(_PHP_URL)
+    req = requests.head(_PHP_URL, headers={'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4'})
     parsed_url = parse.urlparse(req.headers['location'])
-    logging.debug('error path is %s:', parsed_url.path)
+    logging.warning('error path is %s:', parsed_url.path)
+
 
     try:
         fix_path = parsed_url.path.encode('latin1').decode(encoder)
     except UnicodeDecodeError:
-        fix_path = parsed_url.path.encode('latin1').decode('utf8')
-        encoder = 'utf8'
+        fix_path = parsed_url.path.encode('latin1').decode('gbk')
+        encoder = 'gbk'
 
-    filename = fix_path.split('/')[-1]
+
+    filename = safe_pathname(fix_path.split('/')[-1])
     correct_path = parse.quote(fix_path, encoding=encoder)
     correct_url = parse.urlunsplit((parsed_url.scheme, parsed_url.netloc, correct_path, '', ''))
     return correct_url, filename
+
+
 
 
 class Base:
     folder = 'images'
 
     def __init__(self):
-
         self.downloaded_set = DownloadedImage()
 
-    def download(self, s):
-        with s:
-            url, filename = get_correct_url_and_filename()
-            if self.downloaded_set.exigst(url):
+
+    def download(self):
+
+        url, filename = get_correct_url_and_filename()
+        if self.downloaded_set.exist(url):
+            return
+        else:
+            self.downloaded_set.add(url)
+
+            if os.path.exists(filename):
                 return
-            else:
-                self.downloaded_set.add(url)
 
-                if os.path.exists(filename):
-                    return
+            print('download:', url)
+            res = requests.get(url)
 
-                print('download:', url)
-                content = requests.get(url).content
-                with open(filename, 'wb') as f:
-                    f.write(content)
+            # I really do not know how fix the url path, fuuuuuuuuck
+            if not res.ok:
+                print('not ok', res.url, '\nraw', res.url.encode().decode('latin1'))
+
+                return
+
+            content = res.content
+            with open(filename, 'wb') as f:
+                f.write(content)
 
     def is_finish(self):
         return self.downloaded_set.is_need_exit()
 
 
+class AcCoverDownloader(Base):
+
+    def __init__(self, max_thread=8):
+        self.max_thread = max_thread
+        self._exit_thread_q = queue.Queue()
+        super().__init__()
+
+    def download(self):
+        while not self.is_finish():
+            super().download()
+
+        self._exit_thread_q.put(quit_thread)
+
+    def all_thread_quit(self):
+        return self.max_thread == self._exit_thread_q.qsize()
+
+    def start(self):
+        for t in range(self.max_thread):
+            threading.Thread(target=self.download).start()
+
+        while not self.all_thread_quit():
+            time.sleep(2)
+
+        self.finish()
+
+    def finish(self):
+        print('Finish, download {} images'.format(self.downloaded_set.get_items_num()))
+
+
+
+
 def main():
     mk_dir(os.getcwd(), Base.folder)
     os.chdir(Base.folder)
-    base = Base()
-    s = threading.Semaphore(8)
-    target_list = queue.deque(maxlen=9)
-    while True:
-        for i in range(8):
-            t = threading.Thread(target=base.download, args=(s,))
-            t.start()
-            target_list.append(t)
 
-        for t in target_list:
-            t.join()
-
-        if base.is_finish():
-            break
-
-    while True:
-        if not any(t.is_alive() for t in target_list):
-            break
+    acd = AcCoverDownloader()
+    acd.start()
 
 if __name__ == '__main__':
     main()
