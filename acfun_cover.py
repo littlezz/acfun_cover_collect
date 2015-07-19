@@ -7,8 +7,8 @@ import requests
 from urllib import parse
 import os
 import queue
+import unicodedata
 import logging
-import string
 
 logging.basicConfig(level=logging.WARNING, format='%(threadName)s %(message)s')
 
@@ -21,9 +21,17 @@ quit_thread = object()
 
 
 def safe_pathname(path):
-    valid_char = string.ascii_letters + string.digits + ' -_.()'
+    extra = '-_.'
+    s=[]
 
-    return ''.join(c if c in valid_char else '_' for c in path )
+    for c in unicodedata.normalize('NFKC', path):
+        cat = unicodedata.category(c)[0]
+        if cat in 'LN' or c in extra:
+            s.append(c)
+        elif cat == 'Z':
+            s.append(' ')
+
+    return ''.join(s).strip()
 
 
 def mk_dir(parentpath, name):
@@ -71,14 +79,14 @@ def get_correct_url_and_filename():
 
     req = requests.head(_PHP_URL, headers={'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4'})
     parsed_url = parse.urlparse(req.headers['location'])
-    logging.warning('error path is %s:', parsed_url.path)
+    logging.info('error path is %s:', parsed_url.path)
 
 
     try:
         fix_path = parsed_url.path.encode('latin1').decode(encoder)
     except UnicodeDecodeError:
-        fix_path = parsed_url.path.encode('latin1').decode('gbk')
-        encoder = 'gbk'
+        fix_path = parsed_url.path.encode('utf8').decode('utf8')
+        encoder = 'utf8'
 
 
     filename = safe_pathname(fix_path.split('/')[-1])
