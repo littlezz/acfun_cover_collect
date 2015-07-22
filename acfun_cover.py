@@ -1,14 +1,12 @@
-import time
-
 __author__ = 'zz'
-
+import time
 import threading
 import requests
 from urllib import parse
 import os
 import queue
 import unicodedata
-from requests.utils import requote_uri
+from fix_headers_parse import make_headers_fix
 import logging
 
 logging.basicConfig(level=logging.WARNING, format='%(threadName)s %(message)s')
@@ -19,11 +17,12 @@ log_list = []
 
 
 quit_thread = object()
+make_headers_fix()
 
 
 def safe_pathname(path):
     extra = '-_.'
-    s=[]
+    s = []
 
     for c in unicodedata.normalize('NFKC', path):
         cat = unicodedata.category(c)[0]
@@ -45,7 +44,7 @@ def mk_dir(parentpath, name):
 
 
 class DownloadedImage:
-    #if continuous_exigist > 55, there is no more image should be download
+    # if continuous_exigist > 55, there is no more image should be download
     _exit_bound = 55
 
     def __init__(self):
@@ -67,46 +66,22 @@ class DownloadedImage:
             self._set.add(key)
 
     def is_need_exit(self):
-        return True if self.continuous_exist > self._exit_bound else False
+        return self.continuous_exist > self._exit_bound
 
     def get_items_num(self):
         return len(self._set)
 
 
-# I really don't know how to get the correct url , F*ck the encoding
-def get_correct_url_and_filename():
-
-    encoder = 'utf8'
-
+def get_url_and_filename():
     req = requests.head(_PHP_URL)
-    # parsed_url = parse.urlparse(req.headers['location'])
     url = req.headers['location']
 
     logging.warning('error path is %s:', url)
 
+    path = parse.urlparse(url).path
+    filename = safe_pathname(path.rsplit('/')[-1])
 
-    # try:
-    #     fix_path = parsed_url.path.encode('latin1').decode(encoder)
-    # except UnicodeDecodeError:
-    #     fix_path = parsed_url.path.encode('utf8').decode('utf8')
-    #     encoder = 'utf8'
-
-    try:
-        url = url.encode('latin1').decode('utf8')
-    except UnicodeDecodeError:
-        pass
-
-    parsed_url = parse.urlparse(url)
-    fix_path = parsed_url.path
-
-
-    filename = safe_pathname(fix_path.split('/')[-1])
-    # correct_path = parse.quote(fix_path, encoding=encoder)
-    # correct_url = parse.urlunsplit((parsed_url.scheme, parsed_url.netloc, correct_path, '', ''))
-    correct_url = requote_uri(url)
-    return correct_url, filename
-
-
+    return url, filename
 
 
 class Base:
@@ -115,10 +90,9 @@ class Base:
     def __init__(self):
         self.downloaded_set = DownloadedImage()
 
-
     def download(self):
 
-        url, filename = get_correct_url_and_filename()
+        url, filename = get_url_and_filename()
         if self.downloaded_set.exist(url):
             return
         else:
@@ -173,14 +147,13 @@ class AcCoverDownloader(Base):
         print('Finish, download {} images'.format(self.downloaded_set.get_items_num()))
 
 
-
-
 def main():
     mk_dir(os.getcwd(), Base.folder)
     os.chdir(Base.folder)
 
     acd = AcCoverDownloader()
     acd.start()
+
 
 if __name__ == '__main__':
     main()
