@@ -9,7 +9,7 @@ Require
 ---------
 - python3
 - requests
-- [fix_headers_parse](https://github.com/littlezz/acfun_cover_collect/releases/download/v1.0/images.zip)
+- [fix_headers_parse](https://github.com/littlezz/fix-headers-parse)
 
 
 Screen shot
