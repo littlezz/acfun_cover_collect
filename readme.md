@@ -5,6 +5,21 @@ This is a script that download the cover image of h.acfun.tv
 
 
 
+Require
+---------
+- python3
+- requests
+- [fix_headers_parse](https://github.com/littlezz/acfun_cover_collect/releases/download/v1.0/images.zip)
+
+
+Screen shot
+-------------
+result
+
+![](/screenshot/ss1.png)
+
+
+
 编码问题
 ----------
 `encode('latin1').decode('utf8')` 这个做法是正确的。
@@ -16,18 +31,13 @@ requests最近的一次提交修正了这个问题
 
 现在的问题是， url缺失是requests的锅还是httplib的锅。
 
+#### 2015年07月22日15:59:11
+依赖fix_headers_parse (https://github.com/littlezz/fix-headers-parse), 编码问题得到了解决， 详细的细节也在那里进行了说明。
 
 
 
-Screen shot
--------------
-result
+### Damn it! (好吧， 不是A岛的锅， 后面的东西留在这里当做是黑历史吧)
 
-![](/screenshot/ss1.png)
-
-
-Damn it!
------------
 Firstly, i lost my chinese input method and my english is not pretty good, but i still want to  *fxck* the man who does not use 'utf8'!  
 it waste me more than 4 hours to know the url is encoded by 'gbk' instead of 'utf8'! Damn it!  
 At first, i can not acess the url, i guess that i do not have cookies or not set up the correct headers, then i try change the headers,but it doesn't work,
@@ -58,13 +68,11 @@ f8?
 ?  
 
 
-Good News
---------------
-Now the url encoder is utf8!
 
 
-How to use
---------------
+
+### ~How to use~
+
 just run and wish the man who use 'gbk' go hell
 
 
