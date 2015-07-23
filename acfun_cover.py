@@ -44,7 +44,7 @@ def mk_dir(parentpath, name):
 
 
 class DownloadedImage:
-    # if continuous_exigist > 55, there is no more image should be download
+    # if continuous_exist > 55, there is no more image should be download
     _exit_bound = 55
 
     def __init__(self):
@@ -104,10 +104,8 @@ class Base:
             print('download:', url)
             res = requests.get(url)
 
-            # I really do not know how fix the url path, fuuuuuuuuck
             if not res.ok:
                 print('not ok', res.url, '\nraw', res.url.encode().decode('latin1'))
-
                 return
 
             content = res.content
